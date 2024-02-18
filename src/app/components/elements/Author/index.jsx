@@ -15,6 +15,9 @@ import UserTitle from 'app//components/elements/UserTitle';
 import Sanitizer from 'app//utils/Sanitizer';
 import AuthorDropdown from '../AuthorDropdown';
 
+import Blacklist from '../Blacklist';
+import PromotedMember from '../PromotedMember';
+
 const { string, bool, number } = PropTypes;
 
 const closers = [];
@@ -152,6 +155,8 @@ class Author extends React.Component {
                     </strong>
                     {' '}
                     <Reputation value={authorRep} />
+                    <Blacklist author={author} />
+                    <PromotedMember author={author} />
                     {warn}
                     {userTitle}
                 </span>

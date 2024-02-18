@@ -1,10 +1,32 @@
 /*eslint prefer-destructuring: "warn"*/
 /* global $STM_Config */
 import { api } from '@hiveio/hive-js';
+import axios from 'axios';
 import Big from 'big.js';
 import { ifHive } from 'app/utils/Community';
 import stateCleaner from 'app/redux/stateCleaner';
 import { fetchCrossPosts, augmentContentWithCrossPost } from 'app/utils/CrossPosts';
+
+// TODO: add server-side synchronization of external requests,
+// and bybass this if we are server-side rendering.
+async function externalRequests() {
+    const state = {}
+    await axios.get($STM_Config.coal_url, { timeout: 3000 }).then((response) => {
+        const map = new Map();
+        if (response.status === 200) {
+          // eslint-disable-next-line no-restricted-syntax
+          for (const data of response.data) {
+             map.set(data.name, data);
+          }
+          state.blacklist = map;
+        }
+    }).catch((error) => {
+        const map = new Map();
+        console.error(error);
+        state.blacklist = map;
+    });
+    return state
+}
 
 export async function callBridge(method, params) {
     // [JES] Hivemind throws an exception if you call for my/[trending/payouts/new/etc] with a null observer
@@ -108,6 +130,7 @@ export async function getStateAsync(url, observer, ssr = false) {
         content: {},
         discussion_idx: {},
         profiles: {},
+        blacklist: {},
     };
 
     // load `content` and `discussion_idx`
@@ -133,6 +156,30 @@ export async function getStateAsync(url, observer, ssr = false) {
             // Nothing
         }
     }
+    
+    const response = await externalRequests()
+    state.blacklist = response.blacklist
+    
+    const promotedMembersListURL = 'https://api.nekosunevr.co.uk/v4/apps/ranks/blurt';
+
+    await axios
+        .get(promotedMembersListURL, {
+            timeout: 3000
+        })
+        .then((response) => {
+            const map = new Map();
+            if (response.status === 200) {
+                // eslint-disable-next-line no-restricted-syntax
+                for (const data of response.data) {
+                    map.set(data.name, data);
+                }
+                state.promoted_members = map;
+            }
+        })
+        .catch((error) => {
+            console.warn(error);
+        });
+
 
     // for SSR, load profile on any profile page or discussion thread author
     const account = tag && tag[0] == '@' ? tag.slice(1) : page == 'thread' ? key[0].slice(1) : null;
