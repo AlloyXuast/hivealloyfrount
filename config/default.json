@@ -28,6 +28,7 @@
     "secret_key": false,
     "site_key": false
   },
+  "coal_url": "https://api.nekosunevr.co.uk/v4/apps/banned/hive",
   "server_session_secret": "exiKdyF+IwRIXJDmtGIl4vWUz4i3eVSISpfZoeYc0s4=",
   "session_cookie_key": "hive-dev",
   "session_key": "haRYmEDmAndOgRempfLetIVI",
